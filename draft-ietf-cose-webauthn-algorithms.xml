@@ -14,7 +14,7 @@
 
 <rfc category="std" 
      ipr="trust200902" 
-     docName="draft-ietf-cose-webauthn-algorithms-00">
+     docName="draft-ietf-cose-webauthn-algorithms-01">
   <front>
 
     <title>COSE and JOSE Registrations for WebAuthn Algorithms</title>
@@ -27,7 +27,7 @@
       </address>
     </author>
 
-    <date day="26" month="March" year="2019" />
+    <date day="8" month="July" year="2019" />
 
     <area>Security</area>
     <workgroup>COSE Working Group</workgroup>
@@ -100,22 +100,22 @@
 	<c>RS256</c>
 	<c>TBD (temporary assignment -257 already in place)</c>
 	<c>SHA-256</c>
-	<c>RSASSA-PKCS1-v1_5 w/ SHA-256</c>
+	<c>RSASSA-PKCS1-v1_5 using SHA-256</c>
 
 	<c>RS384</c>
 	<c>TBD (temporary assignment -258 already in place)</c>
 	<c>SHA-384</c>
-	<c>RSASSA-PKCS1-v1_5 w/ SHA-384</c>
+	<c>RSASSA-PKCS1-v1_5 using SHA-384</c>
 
 	<c>RS512</c>
 	<c>TBD (temporary assignment -259 already in place)</c>
 	<c>SHA-512</c>
-	<c>RSASSA-PKCS1-v1_5 w/ SHA-512</c>
+	<c>RSASSA-PKCS1-v1_5 using SHA-512</c>
 
 	<c>RS1</c>
 	<c>TBD (temporary assignment -65535 already in place)</c>
 	<c>SHA-1</c>
-	<c>RSASSA-PKCS1-v1_5 w/ SHA-1</c>
+	<c>RSASSA-PKCS1-v1_5 using SHA-1</c>
 
       </texttable>
     </section>
@@ -125,7 +125,7 @@
       <t>
 	This section defines algorithm encodings and representations enabling the
 	Standards for Efficient Cryptography Group (SECG) elliptic curve
-	"secp256k1" <xref target="SEC2"/> to be used for
+	secp256k1 <xref target="SEC2"/> to be used for
 	JSON Object Signing and Encryption (JOSE) <xref target="RFC7515"/> and
 	CBOR Object Signing and Encryption (COSE) <xref target="RFC8152"/> messages.
       </t>
@@ -133,14 +133,14 @@
       <section title="JOSE and COSE secp256k1 Curve Key Representations" anchor="secp256k1_curve">
 	<t>
 	  The Standards for Efficient Cryptography Group (SECG) elliptic curve
-	  "secp256k1" <xref target="SEC2"/> is represented in
+	  secp256k1 <xref target="SEC2"/> is represented in
 	  a JSON Web Key (JWK) <xref target="RFC7517"/> using these values:
 	</t>
 	<t>
 	  <?rfc subcompact="yes"?>
 	  <list style="symbols">  
 	    <t><spanx style="verb">kty</spanx>: <spanx style="verb">EC</spanx></t>
-	    <t><spanx style="verb">crv</spanx>: <spanx style="verb">P-256K</spanx></t>
+	    <t><spanx style="verb">crv</spanx>: <spanx style="verb">secp256k1</spanx></t>
 	  </list>
 	  <?rfc subcompact="no"?>
 	</t>
@@ -156,7 +156,7 @@
 	  <?rfc subcompact="yes"?>
 	  <list style="symbols">  
 	    <t><spanx style="verb">kty</spanx> (1): <spanx style="verb">EC2</spanx> (2)</t>
-	    <t><spanx style="verb">crv</spanx> (-1): <spanx style="verb">P-256K</spanx> (TBD - requested assignment 8)</t>
+	    <t><spanx style="verb">crv</spanx> (-1): <spanx style="verb">secp256k1</spanx> (TBD - requested assignment 8)</t>
 	  </list>
 	  <?rfc subcompact="no"?>
 	</t>
@@ -170,11 +170,40 @@
       <section title="ECDSA Signature with secp256k1 Curve" anchor="secp256k1_ECDSA">
 	<t>
 	  The ECDSA signature algorithm is defined in <xref target="DSS"/>.
+	  This specification defines the use of ECDSA with the secp256k1 curve
+	  and the SHA-256 <xref target="DSS"/> cryptographic hash function.
 	  Implementations need to check that the key type is <spanx style="verb">EC</spanx> for JOSE or
 	  <spanx style="verb">EC2</spanx> (2) for COSE when creating or verifying a signature.
 	</t>
 	<t>
-	  The ECDSA algorithm specified in this document is:
+	  The ECDSA secp256k1 SHA-256 digital signature is generated as follows:
+
+	  <list style="numbers">
+	    <t>
+	      Generate a digital signature of the JWS Signing Input
+	      or the COSE payload
+	      using ECDSA secp256k1 SHA-256 with
+	      the desired private key. The output will be the pair
+	      (R, S), where R and S are 256-bit unsigned integers.
+	    </t>
+	    <t>
+	      Turn R and S into octet sequences in big-endian order,
+	      with each array being be 32 octets long.
+	      The octet sequence representations MUST NOT be shortened
+	      to omit any leading zero octets contained in the values.
+	    </t>
+	    <t>
+	      Concatenate the two octet sequences in the order R and then S.
+	      (Note that many ECDSA implementations will directly produce
+	      this concatenation as their output.)
+	    </t>
+	    <t>
+	      The resulting 64-octet sequence is the JWS Signature or COSE signature value.
+	    </t>
+	  </list>
+	</t>
+	<t>
+	  The ECDSA secp256k1 SHA-256 algorithm specified in this document uses these identifiers:
 	</t>
 	<texttable anchor="table-ec-algs" title="ECDSA Algorithm Values" suppress-title="false" align="center" style="full">
 	  <ttcol align="left">JOSE Alg Name</ttcol>
@@ -183,7 +212,7 @@
 
 	  <c>ES256K</c>
 	  <c>TBD (requested assignment -43)</c>
-	  <c>ECDSA w/ secp256k1 Curve</c>
+	  <c>ECDSA using secp256k1 curve and SHA-256</c>
 
 	</texttable>
       </section>
@@ -207,7 +236,7 @@
 	      Value: TBD (temporary assignment -257 already in place)
 	    </t>
 	    <t>
-	      Description: RSASSA-PKCS1-v1_5 w/ SHA-256
+	      Description: RSASSA-PKCS1-v1_5 using SHA-256
 	    </t>
 	    <t>
 	      Reference: <xref target="RSASSA-PKCS1-v1_5"/> of this document 
@@ -226,7 +255,7 @@
 	      Value: TBD (temporary assignment -258 already in place)
 	    </t>
 	    <t>
-	      Description: RSASSA-PKCS1-v1_5 w/ SHA-384
+	      Description: RSASSA-PKCS1-v1_5 using SHA-384
 	    </t>
 	    <t>
 	      Reference: <xref target="RSASSA-PKCS1-v1_5"/> of this document
@@ -245,7 +274,7 @@
 	      Value: TBD (temporary assignment -259 already in place)
 	    </t>
 	    <t>
-	      Description: RSASSA-PKCS1-v1_5 w/ SHA-512
+	      Description: RSASSA-PKCS1-v1_5 using SHA-512
 	    </t>
 	    <t>
 	      Reference: <xref target="RSASSA-PKCS1-v1_5"/> of this document 
@@ -264,7 +293,7 @@
 	      Value: TBD (temporary assignment -65535 already in place)
 	    </t>
 	    <t>
-	      Description: RSASSA-PKCS1-v1_5 w/ SHA-1
+	      Description: RSASSA-PKCS1-v1_5 using SHA-1
 	    </t>
 	    <t>
 	      Reference: <xref target="RSASSA-PKCS1-v1_5"/> of this document 
@@ -283,7 +312,7 @@
 	      Value: TBD (requested assignment -43)
 	    </t>
 	    <t>
-	      Description: ECDSA w/ secp256k1 Curve
+	      Description: ECDSA using secp256k1 curve and SHA-256
 	    </t>
 	    <t>
 	      Reference: <xref target="secp256k1_ECDSA"/> of this document
@@ -305,7 +334,7 @@
 	  <?rfc subcompact="yes"?>
 	  <list style='symbols'>
 	    <t>
-	      Name: P-256K
+	      Name: secp256k1
 	    </t>
 	    <t>
 	      Value: TBD (requested assignment 8)
@@ -314,7 +343,7 @@
 	      Key Type: EC2
 	    </t>
 	    <t>
-	      Description: SECG secp256k1 Curve
+	      Description: SECG secp256k1 curve
 	    </t>
 	    <t>
 	      Change Controller: IESG
@@ -342,7 +371,7 @@
 	      Algorithm Name: ES256K
 	    </t>
 	    <t>
-	      Algorithm Description: ECDSA w/ secp256k1 Curve
+	      Algorithm Description: ECDSA using secp256k1 curve and SHA-256
 	    </t>
 	    <t>
 	      Algorithm Usage Locations: alg
@@ -373,10 +402,10 @@
 	  <?rfc subcompact="yes"?>
 	  <list style='symbols'>
 	    <t>
-	      Curve Name: P-256K
+	      Curve Name: secp256k1
 	    </t>
 	    <t>
-	      Curve Description: SECG secp256k1 Curve
+	      Curve Description: SECG secp256k1 curve
 	    </t>
 	    <t>
 	      JOSE Implementation Requirements: Optional
@@ -683,9 +712,12 @@
 
       <t>
 	Thanks to
+	Stephen Farrell,
 	John Fontana,
 	Jeff Hodges,
+	John Mattsson,
 	Tony Nadalin,
+	Matt Palmer,
 	Jim Schaad,
 	Göran Selander,
 	Wendy Seltzer,
@@ -699,6 +731,19 @@
     <section title="Document History" anchor="History">
       <t>
         [[ to be removed by the RFC Editor before publication as an RFC ]]
+      </t>
+
+      <t>
+        -01
+        <list style='symbols'>
+          <t>
+	    Changed the JOSE curve identifier from <spanx style="verb">P-256K</spanx>
+	    to <spanx style="verb">secp256k1</spanx>.
+          </t>
+	  <t>
+	    Specified that secp256k1 signing is done using the SHA-256 hash function.
+	  </t>
+        </list>
       </t>
 
       <t>
